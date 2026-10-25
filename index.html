@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>甜甜 · 我们的专属小天地</title>
+<style>
+  /* ============ 配色与基础 ============ */
+  :root{
+    --rose:#ff6b9d;
+    --rose-deep:#e75480;
+    --peach:#ffb3c6;
+    --text:#6b4250;
+    --text-soft:#a67885;
+    --card:#ffffff;
+    --glass:rgba(255,255,255,.55);
+    --shadow:0 10px 30px rgba(230,110,150,.16);
+    --shadow-lg:0 20px 50px rgba(230,110,150,.25);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;
+    color:var(--text);
+    background:linear-gradient(160deg,#fff5f7 0%,#ffeef3 35%,#ffe3ec 70%,#fdd9e6 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    overflow-x:hidden;
+    line-height:1.6;
+  }
+  ::selection{background:var(--rose);color:#fff}
+
+  /* ============ 飘落的爱心 ============ */
+  #hearts{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+  .heart-float{
+    position:absolute;bottom:-60px;
+    animation:floatUp linear forwards;
+    opacity:0;
+    will-change:transform,opacity;
+  }
+  @keyframes floatUp{
+    0%{transform:translateY(0) translateX(0) rotate(0deg) scale(.6);opacity:0}
+    10%{opacity:.9}
+    100%{transform:translateY(-110vh) translateX(40px) rotate(30deg) scale(1.1);opacity:0}
+  }
+
+  /* ============ 顶部导航 ============ */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:50;
+    display:flex;justify-content:center;gap:6px;flex-wrap:wrap;
+    padding:12px 16px;
+    backdrop-filter:blur(14px);
+    background:rgba(255,255,255,.6);
+    box-shadow:0 2px 14px rgba(230,110,150,.08);
+  }
+  nav a{
+    text-decoration:none;color:var(--text-soft);
+    font-size:14px;padding:7px 14px;border-radius:999px;
+    transition:.25s;font-weight:500;
+  }
+  nav a:hover{color:#fff;background:var(--rose)}
+  nav a.active{color:#fff;background:linear-gradient(135deg,var(--rose),var(--rose-deep))}
+
+  /* ============ 管理按钮 ============ */
+  .manage-btn{
+    position:fixed;top:60px;right:16px;z-index:60;
+    width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;
+    background:linear-gradient(135deg,var(--rose),var(--rose-deep));color:#fff;font-size:22px;
+    box-shadow:var(--shadow-lg);transition:.25s;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .manage-btn:hover{transform:rotate(90deg) scale(1.08)}
+  body.manage .manage-btn{background:#d16b85}
+  .manage-bar{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:60;
+    display:none;gap:10px;padding:12px 16px;border-radius:999px;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(12px);
+    box-shadow:var(--shadow-lg);flex-wrap:wrap;justify-content:center;
+  }
+  body.manage .manage-bar{display:flex}
+  .manage-bar button{
+    border:none;cursor:pointer;padding:10px 18px;border-radius:999px;
+    font-size:14px;font-weight:600;color:#fff;transition:.2s;
+  }
+  .btn-add-photo{background:linear-gradient(135deg,#ff9a9e,#ff6b9d)}
+  .btn-add-video{background:linear-gradient(135deg,#a18cd1,#f78ca0)}
+  .btn-reset{background:#d9a5b6}
+  .manage-bar button:hover{transform:translateY(-2px)}
+  .btn-reset:hover{background:#d16b85}
+
+  .del-btn{
+    position:absolute;top:8px;right:8px;z-index:6;
+    width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;
+    background:rgba(0,0,0,.5);color:#fff;font-size:15px;
+    display:none;align-items:center;justify-content:center;transition:.2s;
+  }
+  body.manage .del-btn{display:flex}
+  .del-btn:hover{background:#e63a3a}
+
+  /* ============ 区块通用 ============ */
+  section{position:relative;z-index:1;padding:70px 20px;max-width:1080px;margin:0 auto}
+  .sec-title{text-align:center;margin-bottom:40px}
+  .sec-title h2{
+    font-size:30px;color:var(--rose-deep);
+    display:inline-block;position:relative;
+  }
+  .sec-title h2::after{
+    content:"";display:block;width:60%;height:3px;margin:10px auto 0;
+    border-radius:3px;background:linear-gradient(90deg,transparent,var(--rose),transparent);
+  }
+  .sec-title p{margin-top:12px;color:var(--text-soft);font-size:15px}
+
+  /* ============ 首屏 Hero ============ */
+  .hero{
+    min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;
+    padding-top:80px;
+  }
+  .hero .kiss{
+    font-size:64px;display:inline-block;
+    animation:pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+  .hero h1{
+    font-size:clamp(44px,9vw,80px);font-weight:800;letter-spacing:2px;
+    background:linear-gradient(120deg,var(--rose-deep),var(--rose) 40%,#ff8fab 70%,var(--rose-deep));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    margin:10px 0 6px;
+  }
+  .hero .sub{font-size:18px;color:var(--text-soft);letter-spacing:6px}
+  .hero .hint{
+    position:absolute;bottom:30px;color:var(--text-soft);font-size:13px;
+    animation:bounce 1.8s infinite;
+  }
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+
+  /* ============ 倒计时 ============ */
+  .countdown-wrap{
+    display:flex;justify-content:center;gap:16px;flex-wrap:wrap;
+    margin-top:10px;
+  }
+  .cd-card{
+    background:var(--glass);backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,.7);
+    border-radius:22px;box-shadow:var(--shadow);
+    min-width:120px;padding:26px 18px;text-align:center;
+    transition:.3s;
+  }
+  .cd-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg)}
+  .cd-card .num{
+    font-size:clamp(38px,6vw,58px);font-weight:800;line-height:1;
+    color:var(--rose-deep);
+    font-variant-numeric:tabular-nums;
+  }
+  .cd-card .lab{margin-top:8px;color:var(--text-soft);font-size:14px;letter-spacing:3px}
+  .cd-tip{margin-top:28px;text-align:center;color:var(--text-soft);font-size:15px}
+  .cd-done{
+    display:none;text-align:center;font-size:30px;color:var(--rose-deep);font-weight:800;
+  }
+  .cd-done .big{font-size:60px}
+
+  /* ============ 我们的距离 ============ */
+  .dist-wrap{
+    display:flex;align-items:center;justify-content:center;gap:20px;
+    max-width:760px;margin:0 auto;flex-wrap:wrap;
+  }
+  .dist-city{
+    background:var(--glass);border:1px solid rgba(255,255,255,.7);
+    border-radius:18px;padding:20px 26px;box-shadow:var(--shadow);
+    font-size:18px;font-weight:700;color:var(--rose-deep);
+    min-width:140px;text-align:center;transition:.3s;
+  }
+  .dist-city:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg)}
+  .dist-city .pin{font-size:30px;display:block;margin-bottom:6px}
+  .dist-city input{
+    border:none;outline:none;background:transparent;width:150px;
+    font-size:18px;font-weight:700;color:var(--rose-deep);
+    text-align:center;font-family:inherit;
+  }
+  .dist-city input::placeholder{color:var(--text-soft);font-weight:500;font-size:15px}
+  .dist-mid{flex:1;min-width:220px;position:relative;text-align:center}
+  .dist-line{
+    position:relative;height:4px;border-radius:4px;margin:0 4px;
+    background:linear-gradient(90deg,var(--rose),var(--peach),var(--rose));
+  }
+  .dist-plane{
+    position:absolute;top:-20px;left:0;font-size:24px;
+    animation:fly 5s ease-in-out infinite;
+  }
+  @keyframes fly{
+    0%{left:0%;transform:translateX(0) rotate(-6deg)}
+    50%{left:calc(100% - 24px);transform:translateX(0) rotate(0deg)}
+    100%{left:0%;transform:translateX(0) rotate(-6deg)}
+  }
+  .dist-km{margin-top:18px;font-size:15px;color:var(--text-soft)}
+  .dist-km b{font-size:30px;color:var(--rose-deep);font-weight:800;font-variant-numeric:tabular-nums}
+  .dist-note{text-align:center;margin-top:28px;color:var(--text-soft);font-size:15px}
+
+  /* ============ 照片墙 ============ */
+  .wall{column-count:4;column-gap:16px}
+  .wall .ph{
+    position:relative;overflow:hidden;border-radius:16px;margin-bottom:16px;
+    cursor:pointer;break-inside:avoid;box-shadow:var(--shadow);
+    transition:.35s;background:#fff;
+  }
+  .wall .ph:hover{transform:translateY(-6px) scale(1.02);box-shadow:var(--shadow-lg)}
+  .wall .ph img{width:100%;display:block;transition:.5s}
+  .wall .ph:hover img{transform:scale(1.08)}
+  .wall .ph .mask{
+    position:absolute;inset:0;background:linear-gradient(to top,rgba(231,84,128,.35),transparent 60%);
+    opacity:0;transition:.35s;display:flex;align-items:flex-end;padding:14px;
+  }
+  .wall .ph:hover .mask{opacity:1}
+  .wall .ph .mask span{color:#fff;font-size:14px;letter-spacing:1px}
+
+  /* ============ 视频 ============ */
+  .video-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .video-card{
+    background:var(--card);border-radius:18px;overflow:hidden;
+    box-shadow:var(--shadow);transition:.3s;
+  }
+  .video-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg)}
+  .vwrap{position:relative}
+  .video-card video{width:100%;display:block;background:#000;aspect-ratio:16/9;object-fit:cover}
+  .video-card .cap{padding:14px 16px;font-size:14px;color:var(--text-soft);text-align:center}
+
+  /* ============ 留言 ============ */
+  .note{
+    max-width:640px;margin:0 auto;text-align:center;
+    background:var(--glass);backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,.7);border-radius:24px;
+    padding:44px 34px;box-shadow:var(--shadow);
+  }
+  .note .q{font-size:20px;color:var(--rose-deep);font-weight:600;line-height:1.9}
+  .note .from{margin-top:18px;color:var(--text-soft);letter-spacing:2px}
+
+  footer{text-align:center;padding:40px 20px;color:var(--text-soft);font-size:13px;position:relative;z-index:1}
+  footer .heart{color:var(--rose)}
+
+  /* ============ 灯箱 ============ */
+  .lightbox{
+    position:fixed;inset:0;z-index:100;background:rgba(40,10,22,.92);
+    display:none;align-items:center;justify-content:center;flex-direction:column;
+  }
+  .lightbox.open{display:flex}
+  .lightbox img{max-width:88vw;max-height:80vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .lb-close,.lb-prev,.lb-next{
+    position:absolute;background:rgba(255,255,255,.12);border:none;color:#fff;
+    width:48px;height:48px;border-radius:50%;font-size:22px;cursor:pointer;
+    transition:.2s;display:flex;align-items:center;justify-content:center;
+  }
+  .lb-close:hover,.lb-prev:hover,.lb-next:hover{background:var(--rose)}
+  .lb-close{top:24px;right:24px}
+  .lb-prev{left:20px;top:50%;transform:translateY(-50%)}
+  .lb-next{right:20px;top:50%;transform:translateY(-50%)}
+  .lb-count{position:absolute;bottom:22px;color:#f5c6d4;font-size:14px;letter-spacing:2px}
+
+  /* ============ 响应式 ============ */
+  @media(max-width:900px){.wall{column-count:3}}
+  @media(max-width:640px){
+    .wall{column-count:2;column-gap:10px}
+    .video-grid{grid-template-columns:1fr}
+    .cd-card{min-width:74px;padding:18px 10px}
+    .cd-card .lab{font-size:12px}
+    nav a{font-size:13px;padding:6px 12px}
+    .dist-wrap{flex-direction:column;gap:14px}
+    .dist-mid{width:100%}
+    .manage-btn{top:60px}
+  }
+</style>
+</head>
+<body>
+
+<div id="hearts"></div>
+
+<!-- 顶部导航 -->
+<nav id="nav">
+  <a href="#home" class="active">首页</a>
+  <a href="#countdown">倒计时</a>
+  <a href="#distance">距离</a>
+  <a href="#photos">照片墙</a>
+  <a href="#videos">视频</a>
+  <a href="#note">想对你说</a>
+</nav>
+
+<!-- 管理按钮 + 工具条 -->
+<button class="manage-btn" id="manageBtn" title="管理照片/视频">⚙️</button>
+<div class="manage-bar">
+  <button class="btn-add-photo" id="addPhotoBtn">＋ 添加照片</button>
+  <button class="btn-add-video" id="addVideoBtn">＋ 添加视频</button>
+  <button class="btn-reset" id="resetBtn">重置全部</button>
+</div>
+<input type="file" id="photoInput" accept="image/*" multiple hidden>
+<input type="file" id="videoInput" accept="video/*" multiple hidden>
+
+<!-- 首屏 -->
+<section class="hero" id="home">
+  <div class="kiss">💗</div>
+  <h1 id="nameText">甜甜</h1>
+  <p class="sub">我们的专属小天地</p>
+  <div class="hint">往下看 ↓</div>
+</section>
+
+<!-- 倒计时 -->
+<section id="countdown">
+  <div class="sec-title">
+    <h2>见面倒计时</h2>
+    <p>下次见面，是我最期待的事</p>
+  </div>
+  <div class="countdown-wrap" id="countdown">
+    <div class="cd-card"><div class="num" id="d">--</div><div class="lab">天</div></div>
+    <div class="cd-card"><div class="num" id="h">--</div><div class="lab">时</div></div>
+    <div class="cd-card"><div class="num" id="m">--</div><div class="lab">分</div></div>
+    <div class="cd-card"><div class="num" id="s">--</div><div class="lab">秒</div></div>
+  </div>
+  <p class="cd-tip" id="cdTip"></p>
+  <div class="cd-done" id="cdDone">
+    <div class="big">🎉</div>
+    见面啦！今天就是我们相见的日子 ❤️
+  </div>
+</section>
+
+<!-- 我们的距离 -->
+<section id="distance">
+  <div class="sec-title">
+    <h2>我们的距离</h2>
+    <p>填上两座城市，自动算距离</p>
+  </div>
+  <div class="dist-wrap">
+    <div class="dist-city"><span class="pin">📍</span><input id="distFrom" list="cityList" placeholder="输入城市" autocomplete="off"></div>
+    <div class="dist-mid">
+      <div class="dist-line"><span class="dist-plane">✈️</span></div>
+      <div class="dist-km"><b id="distKm">···</b> 公里</div>
+    </div>
+    <div class="dist-city"><span class="pin">🏠</span><input id="distTo" list="cityList" placeholder="输入城市" autocomplete="off"></div>
+  </div>
+  <p class="dist-note" id="distNote"></p>
+  <datalist id="cityList"></datalist>
+</section>
+
+<!-- 照片墙 -->
+<section id="photos">
+  <div class="sec-title">
+    <h2>照片墙</h2>
+    <p>每一张，都是想你的证据</p>
+  </div>
+  <div class="wall" id="wall"></div>
+</section>
+
+<!-- 视频 -->
+<section id="videos">
+  <div class="sec-title">
+    <h2>我们的视频</h2>
+    <p>定格下来的那些瞬间</p>
+  </div>
+  <div class="video-grid" id="videoGrid"></div>
+</section>
+
+<!-- 想对你说 -->
+<section id="note">
+  <div class="note">
+    <p class="q" id="messageText">遇见你之后，我的世界都是甜甜的。<br>想见你，从每天的早安到晚安。</p>
+    <p class="from">—— 来自一直惦记你的人</p>
+  </div>
+</section>
+
+<footer>
+  亲手为你做的 <span class="heart">❤</span> 甜甜
+</footer>
+
+<!-- 灯箱 -->
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lbClose">✕</button>
+  <button class="lb-prev" id="lbPrev">‹</button>
+  <img id="lbImg" src="" alt="">
+  <button class="lb-next" id="lbNext">›</button>
+  <div class="lb-count" id="lbCount"></div>
+</div>
+
+<script>
+/* ============================================================
+   在这里修改你的专属设置
+   ============================================================ */
+const CONFIG = {
+  name: "甜甜",                              // 显示的名字
+  sub: "我们的专属小天地",                    // 首屏副标题
+  meetDate: "2027-01-20T00:00:00+08:00",    // 见面时间（1月20日）
+  message: "遇见你之后，我的世界都是甜甜的。<br>想见你，从每天的早安到晚安。", // 想对你说的话
+  photoCount: 29,                           // 原始照片数量
+  videoCount: 2,                            // 原始视频数量
+  heartEmojis: ["❤️","💕","💗","💖","🌹","💞","🩷"]
+};
+
+/* ============ 应用基础配置 ============ */
+document.getElementById("nameText").textContent = CONFIG.name;
+document.querySelector(".hero .sub").textContent = CONFIG.sub;
+document.getElementById("messageText").innerHTML = CONFIG.message;
+document.title = CONFIG.name + " · 我们的专属小天地";
+
+/* ============ 工具 ============ */
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+/* ============ 飘落爱心 ============ */
+(function(){
+  const box = document.getElementById("hearts");
+  const emojis = CONFIG.heartEmojis;
+  function spawn(){
+    if(box.childElementCount > 40) return;
+    const s = document.createElement("span");
+    s.className = "heart-float";
+    s.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    const size = 14 + Math.random()*26;
+    s.style.fontSize = size + "px";
+    s.style.left = Math.random()*100 + "vw";
+    s.style.animationDuration = (7 + Math.random()*8) + "s";
+    s.style.animationDelay = (Math.random()*3) + "s";
+    box.appendChild(s);
+    setTimeout(()=>s.remove(), 18000);
+  }
+  for(let i=0;i<12;i++) spawn();
+  setInterval(spawn, 900);
+})();
+
+/* ============ 倒计时 ============ */
+(function(){
+  const target = new Date(CONFIG.meetDate);
+  const elD=document.getElementById("d"),elH=document.getElementById("h"),
+        elM=document.getElementById("m"),elS=document.getElementById("s");
+  const tip=document.getElementById("cdTip"),done=document.getElementById("cdDone");
+  const wrap=document.getElementById("countdown");
+  const pad=n=>String(n).padStart(2,"0");
+  const fmtDate=d=>d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日";
+
+  function tick(){
+    const diff = target - new Date();
+    if(diff <= 0){
+      wrap.style.display="none";tip.style.display="none";done.style.display="block";
+      return;
+    }
+    elD.textContent = Math.floor(diff/86400000);
+    elH.textContent = pad(Math.floor(diff/3600000)%24);
+    elM.textContent = pad(Math.floor(diff/60000)%60);
+    elS.textContent = pad(Math.floor(diff/1000)%60);
+    tip.textContent = "距离 " + fmtDate(target) + " 见面还有";
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+
+/* ============ 距离提示（填城市自动算距离） ============ */
+const CITIES = {
+  "北京":[39.9042,116.4074], "上海":[31.2304,121.4737], "天津":[39.3434,117.3616], "重庆":[29.5630,106.5516],
+  "香港":[22.3193,114.1694], "澳门":[22.1987,113.5439],
+  "石家庄":[38.0428,114.5149], "唐山":[39.6305,118.1802], "秦皇岛":[39.9354,119.5996], "保定":[38.8740,115.4646], "邯郸":[36.6256,114.5391],
+  "太原":[37.8706,112.5489], "大同":[40.0765,113.3001],
+  "呼和浩特":[40.8424,111.7498], "包头":[40.6575,109.8403], "鄂尔多斯":[39.6084,109.7808],
+  "沈阳":[41.8057,123.4315], "大连":[38.9140,121.6147], "丹东":[40.1292,124.3946],
+  "长春":[43.8171,125.3235], "吉林":[43.8379,126.5496],
+  "哈尔滨":[45.8038,126.5350], "大庆":[46.5907,125.1044],
+  "南京":[32.0603,118.7969], "苏州":[31.2989,120.5853], "无锡":[31.4912,120.3119], "常州":[31.8107,119.9741], "南通":[31.9802,120.8943],
+  "徐州":[34.2044,117.2858], "扬州":[32.3942,119.4129], "镇江":[32.2044,119.4551], "盐城":[33.3776,120.1631], "连云港":[34.5965,119.2216],
+  "杭州":[30.2741,120.1551], "宁波":[29.8683,121.5440], "温州":[27.9943,120.6994], "嘉兴":[30.7522,120.7555], "绍兴":[30.0303,120.5802], "金华":[29.0784,119.6474], "台州":[28.6563,121.4206],
+  "合肥":[31.8206,117.2272], "芜湖":[31.3525,118.4331], "蚌埠":[32.9168,117.3897], "安庆":[30.5429,117.0632],
+  "福州":[26.0745,119.2965], "厦门":[24.4798,118.0894], "泉州":[24.8741,118.6757], "漳州":[24.5130,117.6473], "莆田":[25.4540,119.0077],
+  "南昌":[28.6820,115.8579], "赣州":[25.8311,114.9350], "九江":[29.7051,116.0019],
+  "济南":[36.6512,117.1201], "青岛":[36.0671,120.3826], "烟台":[37.4638,121.4479], "潍坊":[36.7069,119.1617], "淄博":[36.8131,118.0548],
+  "威海":[37.5131,122.1204], "临沂":[35.1047,118.3564], "济宁":[35.4142,116.5871], "泰安":[36.1944,117.0884], "日照":[35.4164,119.5269],
+  "郑州":[34.7466,113.6254], "洛阳":[34.6197,112.4540], "开封":[34.7973,114.3073], "新乡":[35.3030,113.9268], "南阳":[32.9908,112.5283],
+  "商丘":[34.4140,115.6564], "信阳":[32.1470,114.0928], "安阳":[36.1030,114.3930],
+  "武汉":[30.5928,114.3055], "宜昌":[30.6919,111.2865], "襄阳":[32.0090,112.1224], "荆州":[30.3350,112.2415], "黄石":[30.1996,115.0389], "十堰":[32.6290,110.7980],
+  "长沙":[28.2282,112.9388], "株洲":[27.8277,113.1340], "湘潭":[27.8297,112.9441], "衡阳":[26.8932,112.5719], "岳阳":[29.3570,113.1289], "常德":[29.0316,111.6985], "郴州":[25.7706,113.0148],
+  "广州":[23.1291,113.2644], "深圳":[22.5431,114.0579], "珠海":[22.2707,113.5767], "佛山":[23.0218,113.1219], "东莞":[23.0207,113.7518],
+  "中山":[22.5170,113.3926], "惠州":[23.1115,114.4152], "汕头":[23.3541,116.6820], "湛江":[21.2707,110.3594], "江门":[22.5789,113.0818], "韶关":[24.8104,113.5970], "肇庆":[23.0471,112.4650],
+  "南宁":[22.8170,108.3665], "桂林":[25.2736,110.2900], "柳州":[24.3264,109.4280], "北海":[21.4813,109.1201],
+  "海口":[20.0444,110.1999], "三亚":[18.2528,109.5119],
+  "成都":[30.5728,104.0668], "绵阳":[31.4675,104.6796], "德阳":[31.1268,104.3979], "宜宾":[28.7513,104.6434], "泸州":[28.8718,105.4423], "南充":[30.8373,106.1107], "攀枝花":[26.5823,101.7186],
+  "贵阳":[26.6470,106.6302], "遵义":[27.7257,106.9274],
+  "昆明":[25.0389,102.7183], "大理":[25.6065,100.2676], "丽江":[26.8721,100.2299], "曲靖":[25.4902,103.7963], "玉溪":[24.3518,102.5465],
+  "拉萨":[29.6520,91.1721],
+  "西安":[34.3416,108.9398], "宝鸡":[34.3618,107.2374], "咸阳":[34.3331,108.7095], "榆林":[38.2855,109.7344], "渭南":[34.4994,109.5102],
+  "兰州":[36.0611,103.8343], "天水":[34.5809,105.7249],
+  "西宁":[36.6171,101.7782],
+  "银川":[38.4872,106.2309],
+  "乌鲁木齐":[43.8256,87.6168], "克拉玛依":[45.5799,84.8892], "喀什":[39.4704,75.9898],
+  "台北":[25.0330,121.5654], "高雄":[22.6273,120.3014], "台中":[24.1477,120.6736], "台南":[22.9997,120.2270], "新北":[25.0120,121.4657]
+};
+
+const fromInput = document.getElementById("distFrom");
+const toInput = document.getElementById("distTo");
+const kmEl = document.getElementById("distKm");
+const noteEl = document.getElementById("distNote");
+
+// 填充城市联想列表
+document.getElementById("cityList").innerHTML = Object.keys(CITIES).map(c=>`<option value="${c}">`).join("");
+
+function haversine(lat1,lon1,lat2,lon2){
+  const R = 6371, rad = Math.PI/180;
+  const dLat=(lat2-lat1)*rad, dLon=(lon2-lon1)*rad;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*rad)*Math.cos(lat2*rad)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+function findCity(name){
+  name = name.trim();
+  if(!name) return null;
+  if(CITIES[name]) return CITIES[name];
+  const s = name.replace(/[市省]$/,"");
+  return CITIES[s] || null;
+}
+function updateDistance(){
+  const from = fromInput.value.trim(), to = toInput.value.trim();
+  try{ localStorage.setItem("distFrom", from); localStorage.setItem("distTo", to); }catch(e){}
+  const ca = findCity(from), cb = findCity(to);
+  if(from && to && ca && cb){
+    const km = Math.round(haversine(ca[0],ca[1],cb[0],cb[1]));
+    kmEl.textContent = km;
+    noteEl.textContent = `从 ${from} 到 ${to}，相距约 ${km} 公里。相隔再远，也挡不住我想见你的心 ❤️`;
+  }else if(from && to){
+    kmEl.textContent = "···";
+    noteEl.textContent = "没找到这两座城市，试试上面列表里的城市名（比如：北京、上海）～";
+  }else{
+    kmEl.textContent = "···";
+    noteEl.textContent = "填上两座城市，就知道我们相隔多远啦";
+  }
+}
+fromInput.addEventListener("input", updateDistance);
+toInput.addEventListener("input", updateDistance);
+
+// 恢复上次填的城市（默认成都 ↔ 丹东）
+try{
+  const f = localStorage.getItem("distFrom"), t = localStorage.getItem("distTo");
+  fromInput.value = f || "成都";
+  toInput.value = t || "丹东";
+}catch(e){
+  fromInput.value = "成都";
+  toInput.value = "丹东";
+}
+updateDistance();
+
+/* ============ IndexedDB 持久化（照片/视频管理） ============ */
+const DB_NAME = "tian-site-db", DB_VER = 1;
+let db;
+let addedPhotos = [];   // [{id, blob, url, name}]
+let addedVideos = [];
+let deletedPhotos = new Set(); // 原始照片中被删除的 id，如 "photo-03"
+let deletedVideos = new Set();
+
+function openDB(){
+  return new Promise((res,rej)=>{
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = e=>{
+      const d = e.target.result;
+      ["addedPhotos","addedVideos","deletedPhotos","deletedVideos"].forEach(name=>{
+        if(!d.objectStoreNames.contains(name)) d.createObjectStore(name,{keyPath:"id"});
+      });
+    };
+    req.onsuccess = e=>{ db = e.target.result; res(); };
+    req.onerror = e=>rej(e.target.error);
+  });
+}
+function txReq(store, mode, fn){
+  return new Promise((res,rej)=>{
+    const t = db.transaction(store, mode);
+    const s = t.objectStore(store);
+    const r = fn(s);
+    r.onsuccess = ()=>res(r.result);
+    r.onerror = ()=>rej(r.error);
+  });
+}
+const idbGetAll = store => txReq(store,"readonly", s=>s.getAll());
+const idbPut = (store,val) => txReq(store,"readwrite", s=>s.put(val));
+const idbDel = (store,key) => txReq(store,"readwrite", s=>s.delete(key));
+const idbClear = store => txReq(store,"readwrite", s=>s.clear());
+
+async function loadState(){
+  addedPhotos = (await idbGetAll("addedPhotos")).map(o=>({...o, url:URL.createObjectURL(o.blob)}));
+  addedVideos = (await idbGetAll("addedVideos")).map(o=>({...o, url:URL.createObjectURL(o.blob)}));
+  deletedPhotos = new Set((await idbGetAll("deletedPhotos")).map(o=>o.id));
+  deletedVideos = new Set((await idbGetAll("deletedVideos")).map(o=>o.id));
+}
+
+/* ============ 渲染 ============ */
+function currentPhotoList(){
+  const list=[];
+  for(let i=1;i<=CONFIG.photoCount;i++){
+    const id="photo-"+String(i).padStart(2,"0");
+    if(!deletedPhotos.has(id)) list.push({id, src:"photos/"+id+".jpg", added:false});
+  }
+  for(const p of addedPhotos) list.push({id:p.id, src:p.url, added:true});
+  return list;
+}
+function renderPhotos(){
+  const wall = document.getElementById("wall");
+  let html="";
+  currentPhotoList().forEach((p,i)=>{
+    html += `<div class="ph" data-src="${p.src}">
+      <img src="${p.src}" alt="我们的照片" loading="lazy">
+      <button class="del-btn" data-id="${p.id}" data-kind="photo" title="删除">✕</button>
+      <div class="mask"><span>💗 我们的第 ${i+1} 张回忆</span></div>
+    </div>`;
+  });
+  wall.innerHTML = html || '<p style="text-align:center;color:var(--text-soft)">还没有照片，点右下角「添加照片」吧～</p>';
+}
+function renderVideos(){
+  const grid = document.getElementById("videoGrid");
+  let html="";
+  for(let i=1;i<=CONFIG.videoCount;i++){
+    const id="video-"+String(i).padStart(2,"0");
+    if(deletedVideos.has(id)) continue;
+    html += `<div class="video-card">
+      <div class="vwrap">
+        <video controls preload="metadata" src="videos/${id}.mp4"></video>
+        <button class="del-btn" data-id="${id}" data-kind="video" title="删除">✕</button>
+      </div>
+      <div class="cap">💗 属于我们的视频 ${i}</div>
+    </div>`;
+  }
+  for(const v of addedVideos){
+    html += `<div class="video-card">
+      <div class="vwrap">
+        <video controls preload="metadata" src="${v.url}"></video>
+        <button class="del-btn" data-id="${v.id}" data-kind="video" title="删除">✕</button>
+      </div>
+      <div class="cap">💗 ${escapeHtml(v.name || "新增视频")}</div>
+    </div>`;
+  }
+  grid.innerHTML = html || '<p style="text-align:center;color:var(--text-soft)">还没有视频，点右下角「添加视频」吧～</p>';
+}
+
+/* ============ 增删逻辑 ============ */
+function deleteMedia(id, kind){
+  if(id.startsWith("a-")){
+    const arr = kind==="photo" ? addedPhotos : addedVideos;
+    const idx = arr.findIndex(x=>x.id===id);
+    if(idx>=0){ URL.revokeObjectURL(arr[idx].url); arr.splice(idx,1); }
+    idbDel(kind==="photo"?"addedPhotos":"addedVideos", id);
+  }else{
+    const set = kind==="photo" ? deletedPhotos : deletedVideos;
+    set.add(id);
+    idbPut(kind==="photo"?"deletedPhotos":"deletedVideos", {id});
+  }
+  kind==="photo" ? renderPhotos() : renderVideos();
+}
+
+async function addFiles(kind, files){
+  for(const file of files){
+    const id = "a-"+(kind==="photo"?"p":"v")+"-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);
+    const item = {id, blob:file, url:URL.createObjectURL(file), name:file.name};
+    await idbPut(kind==="photo"?"addedPhotos":"addedVideos", item);
+    if(kind==="photo") addedPhotos.push(item); else addedVideos.push(item);
+  }
+  kind==="photo" ? renderPhotos() : renderVideos();
+}
+
+async function resetAll(){
+  addedPhotos.forEach(p=>URL.revokeObjectURL(p.url));
+  addedVideos.forEach(v=>URL.revokeObjectURL(v.url));
+  addedPhotos=[]; addedVideos=[];
+  deletedPhotos=new Set(); deletedVideos=new Set();
+  await Promise.all(["addedPhotos","addedVideos","deletedPhotos","deletedVideos"].map(idbClear));
+  renderPhotos(); renderVideos();
+}
+
+/* ============ 灯箱 ============ */
+(function(){
+  const lb = document.getElementById("lightbox");
+  const img = document.getElementById("lbImg");
+  const count = document.getElementById("lbCount");
+  let photos = [];
+  let idx = 0;
+
+  document.getElementById("wall").addEventListener("click", e=>{
+    const del = e.target.closest(".del-btn");
+    if(del){ e.stopPropagation(); deleteMedia(del.dataset.id, del.dataset.kind); return; }
+    const ph = e.target.closest(".ph");
+    if(!ph) return;
+    photos = Array.from(document.querySelectorAll(".wall .ph")).map(p=>p.dataset.src);
+    idx = photos.indexOf(ph.dataset.src);
+    show();
+  });
+  function show(){
+    img.src = photos[idx];
+    count.textContent = (idx+1) + " / " + photos.length;
+    lb.classList.add("open");
+  }
+  document.getElementById("lbClose").addEventListener("click",()=>lb.classList.remove("open"));
+  document.getElementById("lbPrev").addEventListener("click",e=>{e.stopPropagation();idx=(idx-1+photos.length)%photos.length;show();});
+  document.getElementById("lbNext").addEventListener("click",e=>{e.stopPropagation();idx=(idx+1)%photos.length;show();});
+  lb.addEventListener("click",e=>{if(e.target===lb)lb.classList.remove("open");});
+  document.addEventListener("keydown",e=>{
+    if(!lb.classList.contains("open"))return;
+    if(e.key==="Escape")lb.classList.remove("open");
+    if(e.key==="ArrowLeft"){idx=(idx-1+photos.length)%photos.length;show();}
+    if(e.key==="ArrowRight"){idx=(idx+1)%photos.length;show();}
+  });
+})();
+
+/* ============ 视频删除 ============ */
+document.getElementById("videoGrid").addEventListener("click", e=>{
+  const del = e.target.closest(".del-btn");
+  if(del) deleteMedia(del.dataset.id, del.dataset.kind);
+});
+
+/* ============ 管理按钮与事件 ============ */
+document.getElementById("manageBtn").addEventListener("click", ()=>{
+  document.body.classList.toggle("manage");
+});
+document.getElementById("addPhotoBtn").addEventListener("click", ()=>document.getElementById("photoInput").click());
+document.getElementById("addVideoBtn").addEventListener("click", ()=>document.getElementById("videoInput").click());
+document.getElementById("photoInput").addEventListener("change", e=>{ addFiles("photo", e.target.files); e.target.value=""; });
+document.getElementById("videoInput").addEventListener("change", e=>{ addFiles("video", e.target.files); e.target.value=""; });
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  if(confirm("确定要恢复成最初的照片和视频吗？\n（你添加的会被移除，删除的会恢复）")) resetAll();
+});
+
+/* ============ 导航高亮 ============ */
+(function(){
+  const nav=document.getElementById("nav");
+  const links=Array.from(nav.querySelectorAll("a"));
+  const secs=links.map(a=>document.querySelector(a.getAttribute("href")));
+  window.addEventListener("scroll",()=>{
+    let cur=0;
+    secs.forEach((s,i)=>{ if(s && s.getBoundingClientRect().top<=120) cur=i; });
+    links.forEach((a,i)=>a.classList.toggle("active",i===cur));
+  });
+})();
+
+/* ============ 初始化 ============ */
+(async function(){
+  try{
+    await openDB();
+    await loadState();
+  }catch(err){
+    console.warn("浏览器不支持本地存储，管理功能将不可用：", err);
+  }
+  renderPhotos();
+  renderVideos();
+})();
+</script>
+</body>
+</html>
