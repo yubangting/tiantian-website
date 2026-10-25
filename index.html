@@ -377,6 +377,7 @@
   <div class="lb-count" id="lbCount"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ============================================================
    在这里修改你的专属设置
@@ -536,65 +537,40 @@ try{
 }
 updateDistance();
 
-/* ============ IndexedDB 持久化（照片/视频管理） ============ */
-const DB_NAME = "tian-site-db", DB_VER = 1;
-let db;
-let addedPhotos = [];   // [{id, blob, url, name}]
-let addedVideos = [];
-let deletedPhotos = new Set(); // 原始照片中被删除的 id，如 "photo-03"
-let deletedVideos = new Set();
+/* ============ Supabase 云存储（照片/视频双方共享） ============ */
+const SUPABASE_URL = "https://ytckipntqygjqsccoxcd.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_qCKGSCVTiJr7cFR5gxdHNQ_5iOG6BqL";
+const BUCKET = "media";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-function openDB(){
-  return new Promise((res,rej)=>{
-    const req = indexedDB.open(DB_NAME, DB_VER);
-    req.onupgradeneeded = e=>{
-      const d = e.target.result;
-      ["addedPhotos","addedVideos","deletedPhotos","deletedVideos"].forEach(name=>{
-        if(!d.objectStoreNames.contains(name)) d.createObjectStore(name,{keyPath:"id"});
-      });
-    };
-    req.onsuccess = e=>{ db = e.target.result; res(); };
-    req.onerror = e=>rej(e.target.error);
-  });
-}
-function txReq(store, mode, fn){
-  return new Promise((res,rej)=>{
-    const t = db.transaction(store, mode);
-    const s = t.objectStore(store);
-    const r = fn(s);
-    r.onsuccess = ()=>res(r.result);
-    r.onerror = ()=>rej(r.error);
-  });
-}
-const idbGetAll = store => txReq(store,"readonly", s=>s.getAll());
-const idbPut = (store,val) => txReq(store,"readwrite", s=>s.put(val));
-const idbDel = (store,key) => txReq(store,"readwrite", s=>s.delete(key));
-const idbClear = store => txReq(store,"readwrite", s=>s.clear());
+let cloudPhotos = [];  // [{name, url}]
+let cloudVideos = [];
 
-async function loadState(){
-  addedPhotos = (await idbGetAll("addedPhotos")).map(o=>({...o, url:URL.createObjectURL(o.blob)}));
-  addedVideos = (await idbGetAll("addedVideos")).map(o=>({...o, url:URL.createObjectURL(o.blob)}));
-  deletedPhotos = new Set((await idbGetAll("deletedPhotos")).map(o=>o.id));
-  deletedVideos = new Set((await idbGetAll("deletedVideos")).map(o=>o.id));
+function publicUrl(path){
+  return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
+}
+
+async function loadCloud(){
+  const [pRes, vRes] = await Promise.all([
+    sb.storage.from(BUCKET).list("photos", {sortBy:{column:"created_at", order:"asc"}, limit:1000}),
+    sb.storage.from(BUCKET).list("videos", {sortBy:{column:"created_at", order:"asc"}, limit:1000}),
+  ]);
+  cloudPhotos = (pRes.data || [])
+    .filter(f => f.name && !f.name.startsWith('.') && f.id !== null)
+    .map(f => ({name:f.name, url:publicUrl("photos/"+f.name)}));
+  cloudVideos = (vRes.data || [])
+    .filter(f => f.name && !f.name.startsWith('.') && f.id !== null)
+    .map(f => ({name:f.name, url:publicUrl("videos/"+f.name)}));
 }
 
 /* ============ 渲染 ============ */
-function currentPhotoList(){
-  const list=[];
-  for(let i=1;i<=CONFIG.photoCount;i++){
-    const id="photo-"+String(i).padStart(2,"0");
-    if(!deletedPhotos.has(id)) list.push({id, src:"photos/"+id+".jpg", added:false});
-  }
-  for(const p of addedPhotos) list.push({id:p.id, src:p.url, added:true});
-  return list;
-}
 function renderPhotos(){
   const wall = document.getElementById("wall");
   let html="";
-  currentPhotoList().forEach((p,i)=>{
-    html += `<div class="ph" data-src="${p.src}">
-      <img src="${p.src}" alt="我们的照片" loading="lazy">
-      <button class="del-btn" data-id="${p.id}" data-kind="photo" title="删除">✕</button>
+  cloudPhotos.forEach((p,i)=>{
+    html += `<div class="ph" data-src="${p.url}">
+      <img src="${p.url}" alt="我们的照片" loading="lazy">
+      <button class="del-btn" data-path="photos/${p.name}" title="删除">✕</button>
       <div class="mask"><span>💗 我们的第 ${i+1} 张回忆</span></div>
     </div>`;
   });
@@ -603,60 +579,54 @@ function renderPhotos(){
 function renderVideos(){
   const grid = document.getElementById("videoGrid");
   let html="";
-  for(let i=1;i<=CONFIG.videoCount;i++){
-    const id="video-"+String(i).padStart(2,"0");
-    if(deletedVideos.has(id)) continue;
-    html += `<div class="video-card">
-      <div class="vwrap">
-        <video controls preload="metadata" src="videos/${id}.mp4"></video>
-        <button class="del-btn" data-id="${id}" data-kind="video" title="删除">✕</button>
-      </div>
-      <div class="cap">💗 属于我们的视频 ${i}</div>
-    </div>`;
-  }
-  for(const v of addedVideos){
+  cloudVideos.forEach((v,i)=>{
     html += `<div class="video-card">
       <div class="vwrap">
         <video controls preload="metadata" src="${v.url}"></video>
-        <button class="del-btn" data-id="${v.id}" data-kind="video" title="删除">✕</button>
+        <button class="del-btn" data-path="videos/${v.name}" title="删除">✕</button>
       </div>
-      <div class="cap">💗 ${escapeHtml(v.name || "新增视频")}</div>
+      <div class="cap">💗 我们的视频 ${i+1}</div>
     </div>`;
-  }
+  });
   grid.innerHTML = html || '<p style="text-align:center;color:var(--text-soft)">还没有视频，点右下角「添加视频」吧～</p>';
 }
 
 /* ============ 增删逻辑 ============ */
-function deleteMedia(id, kind){
-  if(id.startsWith("a-")){
-    const arr = kind==="photo" ? addedPhotos : addedVideos;
-    const idx = arr.findIndex(x=>x.id===id);
-    if(idx>=0){ URL.revokeObjectURL(arr[idx].url); arr.splice(idx,1); }
-    idbDel(kind==="photo"?"addedPhotos":"addedVideos", id);
-  }else{
-    const set = kind==="photo" ? deletedPhotos : deletedVideos;
-    set.add(id);
-    idbPut(kind==="photo"?"deletedPhotos":"deletedVideos", {id});
-  }
-  kind==="photo" ? renderPhotos() : renderVideos();
+async function deleteMediaByPath(path){
+  if(!confirm("确定删除这一项吗？双方都会看到它被移除。")) return;
+  const {error} = await sb.storage.from(BUCKET).remove([path]);
+  if(error){ alert("删除失败：" + error.message); return; }
+  await loadCloud();
+  renderPhotos(); renderVideos();
 }
 
 async function addFiles(kind, files){
+  const sub = kind === "photo" ? "photos" : "videos";
+  let ok = 0, fail = 0;
   for(const file of files){
-    const id = "a-"+(kind==="photo"?"p":"v")+"-"+Date.now()+"-"+Math.random().toString(36).slice(2,7);
-    const item = {id, blob:file, url:URL.createObjectURL(file), name:file.name};
-    await idbPut(kind==="photo"?"addedPhotos":"addedVideos", item);
-    if(kind==="photo") addedPhotos.push(item); else addedVideos.push(item);
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+    const safeName = `${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
+    const path = `${sub}/${safeName}`;
+    const {error} = await sb.storage.from(BUCKET).upload(path, file, {cacheControl:"3600", upsert:false});
+    if(error){ fail++; } else { ok++; }
   }
-  kind==="photo" ? renderPhotos() : renderVideos();
+  if(fail > 0) alert(`上传完成：成功 ${ok} 个，失败 ${fail} 个`);
+  await loadCloud();
+  renderPhotos(); renderVideos();
 }
 
 async function resetAll(){
-  addedPhotos.forEach(p=>URL.revokeObjectURL(p.url));
-  addedVideos.forEach(v=>URL.revokeObjectURL(v.url));
-  addedPhotos=[]; addedVideos=[];
-  deletedPhotos=new Set(); deletedVideos=new Set();
-  await Promise.all(["addedPhotos","addedVideos","deletedPhotos","deletedVideos"].map(idbClear));
+  if(!confirm("确定要清空云端所有照片和视频吗？此操作双方都会生效，无法恢复！")) return;
+  const [pRes, vRes] = await Promise.all([
+    sb.storage.from(BUCKET).list("photos"),
+    sb.storage.from(BUCKET).list("videos"),
+  ]);
+  const paths = [
+    ...(pRes.data||[]).filter(f=>f.name && !f.name.startsWith('.')).map(f=>"photos/"+f.name),
+    ...(vRes.data||[]).filter(f=>f.name && !f.name.startsWith('.')).map(f=>"videos/"+f.name),
+  ];
+  if(paths.length) await sb.storage.from(BUCKET).remove(paths);
+  await loadCloud();
   renderPhotos(); renderVideos();
 }
 
@@ -670,7 +640,7 @@ async function resetAll(){
 
   document.getElementById("wall").addEventListener("click", e=>{
     const del = e.target.closest(".del-btn");
-    if(del){ e.stopPropagation(); deleteMedia(del.dataset.id, del.dataset.kind); return; }
+    if(del){ e.stopPropagation(); deleteMediaByPath(del.dataset.path); return; }
     const ph = e.target.closest(".ph");
     if(!ph) return;
     photos = Array.from(document.querySelectorAll(".wall .ph")).map(p=>p.dataset.src);
@@ -697,7 +667,7 @@ async function resetAll(){
 /* ============ 视频删除 ============ */
 document.getElementById("videoGrid").addEventListener("click", e=>{
   const del = e.target.closest(".del-btn");
-  if(del) deleteMedia(del.dataset.id, del.dataset.kind);
+  if(del) deleteMediaByPath(del.dataset.path);
 });
 
 /* ============ 管理按钮与事件 ============ */
@@ -709,7 +679,7 @@ document.getElementById("addVideoBtn").addEventListener("click", ()=>document.ge
 document.getElementById("photoInput").addEventListener("change", e=>{ addFiles("photo", e.target.files); e.target.value=""; });
 document.getElementById("videoInput").addEventListener("change", e=>{ addFiles("video", e.target.files); e.target.value=""; });
 document.getElementById("resetBtn").addEventListener("click", ()=>{
-  if(confirm("确定要恢复成最初的照片和视频吗？\n（你添加的会被移除，删除的会恢复）")) resetAll();
+  resetAll();
 });
 
 /* ============ 导航高亮 ============ */
@@ -727,10 +697,9 @@ document.getElementById("resetBtn").addEventListener("click", ()=>{
 /* ============ 初始化 ============ */
 (async function(){
   try{
-    await openDB();
-    await loadState();
+    await loadCloud();
   }catch(err){
-    console.warn("浏览器不支持本地存储，管理功能将不可用：", err);
+    console.warn("云端照片加载失败：", err);
   }
   renderPhotos();
   renderVideos();
